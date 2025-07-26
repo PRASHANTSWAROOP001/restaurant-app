@@ -15,7 +15,9 @@ export async function POST(req:NextRequest){
             return NextResponse.json({success:false ,mesage:"invalid data format", error: parsedData.error.flatten }, { status: 400 });
         }
 
-        const hashPassword = await bcrypt.hash(body.password, 10);
+        const {email, password, name} = parsedData.data
+
+        const hashPassword = await bcrypt.hash(password, 10);
 
         const checkUser = await prisma.user.findUnique({
             where:{
@@ -29,7 +31,8 @@ export async function POST(req:NextRequest){
 
         await prisma.user.create({
             data: {
-                email: body.email,
+                email: email,
+                name:name,
                 password: hashPassword,
             },
         });

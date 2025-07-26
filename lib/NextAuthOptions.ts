@@ -4,6 +4,7 @@ import { prisma } from "@/lib/Prisma";
 import bcrypt from "bcrypt";
 import type { NextAuthOptions } from "next-auth";
 import Google from "next-auth/providers/google";
+import Github from "next-auth/providers/github";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -53,6 +54,16 @@ export const authOptions: NextAuthOptions = {
         },
       },
     }),
+    Github({
+      clientId: process.env.GITHUB_CLIENT_ID || "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+      authorization: {
+        params: {
+          scope: "read:user user:email",
+        },
+      },
+    })
+    
   ],
 
   session: {
@@ -62,6 +73,9 @@ export const authOptions: NextAuthOptions = {
   },
 
   secret: process.env.NEXTAUTH_SECRET,
+  pages:{
+    signIn:"/signin"
+  },
 
   events: {
     createUser: async ({ user }) => {
