@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import axios from "axios"
+import { Button } from "@/components/ui/button";
 export default function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -56,6 +57,7 @@ export default function SignupPage() {
                         </div>
                         <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Sign Up</button>
                     </form>
+                    <Button className="w-full py-2 my-2">Signup Via Google</Button>
                 </div>
 
             </div>

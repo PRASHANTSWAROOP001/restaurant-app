@@ -27,6 +27,14 @@ model User{
   sessions Session[]
   accounts Account[]
 
+  role     Role      @default(USER)
+
+}
+
+enum Role {
+  USER 
+  ADMIN
+  STAFF
 }
 
 model Account {
