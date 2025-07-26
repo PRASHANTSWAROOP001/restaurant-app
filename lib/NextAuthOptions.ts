@@ -57,6 +57,8 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: "jwt",
+    maxAge:60*60,
+    updateAge: 10*60 
   },
 
   secret: process.env.NEXTAUTH_SECRET,
@@ -64,6 +66,9 @@ export const authOptions: NextAuthOptions = {
   events: {
     createUser: async ({ user }) => {
       try {
+
+        console.log("Creating user:", user);
+
         const superAdminEmail = process.env.ADMIN_EMAIL;
         
         if (!superAdminEmail) {
@@ -91,22 +96,40 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user }) {
-      // Only runs the first time the token is issued
-      if (user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email || "" },
-        });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.id = dbUser.id;
-        }
-      }
-      return token;
-    },
+async jwt({ token, user }) {
+  try {
+    // Always get fresh user data from DB using token.email or user.email
+    const email = token?.email || user?.email;
 
+    if (!email) {
+      console.warn("No email found on token or user");
+      return token;
+    }
+
+    const dbUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!dbUser) {
+      console.warn("User not found in DB for email:", email);
+      return token;
+    }
+
+    // Always override with fresh DB values
+    token.email = dbUser.email;
+    token.id = dbUser.id;
+    token.role = dbUser.role || "USER";
+
+    return token;
+  } catch (error) {
+    console.error("Error in jwt callback:", error);
+    return token;
+  }
+},
     async session({ session, token }) {
       // Add custom fields to session
+
+      console.log("Session callback fired. Token:", token);
       if (token) {
         session.user.role = token.role;
         session.user.id = token.id;
