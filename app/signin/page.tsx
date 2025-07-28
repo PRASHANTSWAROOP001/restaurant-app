@@ -22,9 +22,10 @@ export default function SigninPage() {
     console.log(status)
 
     useEffect(()=>{
-      toast("Kindly Signout to login again")
+      
       if(status === "authenticated"){
         // Redirect to home page if user is authenticated
+        toast("Kindly Signout to login again")
         redirect("/");
       }
     },[status])
