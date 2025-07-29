@@ -17,7 +17,7 @@ export const middleware: NextMiddleware = async (request: NextRequest) => {
 
     const userRole = token.role
 
-    if(pathname.startsWith("/dashboard") && userRole !== "ADMIN" && userRole !== "USER"){
+    if(pathname.startsWith("/dashboard") && userRole !== "ADMIN" && userRole !== "STAFF"){
         return NextResponse.redirect(new URL("/unauthorized", request.url))
     }
 

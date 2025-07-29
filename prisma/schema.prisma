@@ -28,6 +28,7 @@ model User{
   accounts Account[]
 
   role     Role      @default(USER)
+  staffProfile StaffProfile?
 
 }
 
@@ -65,4 +66,14 @@ model Session {
   expires DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StaffProfile {
+  id     Int    @id  @default(autoincrement()) 
+  userId String @unique
+  name   String
+  position  String
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
