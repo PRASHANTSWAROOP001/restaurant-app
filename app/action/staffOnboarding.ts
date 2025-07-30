@@ -2,7 +2,7 @@
 import {prisma} from "@/lib/Prisma";
 import  bcrypt from "bcrypt"
 import { staffOnboardingSchema } from "@/lib/ZodValidations";
-import type { StaffProfile } from "../../types/prismaTypes";
+import type { StaffProfile, StaffTableData } from "../../types/prismaTypes";
 
 
 export async function staffOnboardingAction(formData: FormData):Promise<{success:boolean, message:string}> {
@@ -83,12 +83,12 @@ export async function staffOnboardingAction(formData: FormData):Promise<{success
 
 
 
-export async function getAllStaff({page=1, limit=10, search=""}:{page?:number; limit?:number; search?:string;}):Promise<{success:boolean, data?:StaffProfile[] , message:string}>{
+export async function getAllStaff({page=1, limit=10, search=""}:{page?:number; limit?:number; search?:string;}):Promise<{success:boolean, data?:StaffTableData[],totalPage?:number , message:string}>{
     try {
 
         const skip:number = (page-1)*limit
         
-        const data = await prisma.staffProfile.findMany({
+        const data:StaffTableData[] = await prisma.staffProfile.findMany({
             where:{
                 ...(search && {
                     name:{
@@ -101,11 +101,30 @@ export async function getAllStaff({page=1, limit=10, search=""}:{page?:number; l
             take:limit,
             orderBy:{
                 createdAt:"desc"
+            },
+            include:{
+                user:{
+                    select:{
+                        email:true
+                    }
+                }
             }
             
         })
 
-        return {success:true, message:"data fetched successfully", data:data}
+        const totalStaff = await prisma.staffProfile.count({
+            where:{
+                ...(search && {
+                    name:{
+                        contains:search,
+                        mode:"insensitive"
+                    }
+                })
+            }
+        })
+    
+
+        return {success:true, message:"data fetched successfully", data:data, totalPage:totalStaff}
         
     } catch (error) {
 
@@ -113,4 +132,37 @@ export async function getAllStaff({page=1, limit=10, search=""}:{page?:number; l
         return{success:false, message:`error while getting staff data: ${error}`}
         
     }
+}
+
+export async function deleteStaffData(staffId:string):Promise<{success:boolean, message:string}>{
+    try {
+
+        if(!staffId){
+            return {success:false, message:"missing userid"}
+        }
+
+        const searchStaff = await prisma.user.findUnique({
+            where:{
+                id:staffId
+            }
+        })
+
+        if(!searchStaff){
+            return {success:false, message:"404 error staff data does not exist"}
+        }
+
+        await prisma.user.delete({
+            where:{
+                id:staffId
+            }
+        })
+
+        return {success:true, message:"data deleted successfully"}
+
+        
+    } catch (error) {
+        console.error("error happened while deteleting staff data", error)
+        return {success:false, message:`error happened`}
+    }
+
 }
