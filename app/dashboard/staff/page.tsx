@@ -6,7 +6,7 @@ import StaffTable from "@/components/staff/StaffTable";
 
 export default async function StaffDashboard() {
 
-  const {data, totalPage} = await getAllStaff({page:1, limit:10, search:""})
+  const {data, totalPage} = await getAllStaff({page:1, limit:5, search:""})
 
   return (
     <main className="w-full h-screen px-5">

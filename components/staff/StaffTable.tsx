@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import {
   Card,
   CardContent,
@@ -45,7 +45,8 @@ import { Badge } from "@/components/ui/badge";
 import { StaffTableData } from "../../types/prismaTypes";
 import { toast } from "sonner";
 
-import { deleteStaffData, editStaffDetails } from "@/app/action/staffOnboarding";
+import { deleteStaffData, editStaffDetails,getAllStaff } from "@/app/action/staffOnboarding";
+
 
 interface StaffTableEditData extends StaffTableData {
   password?: string;
@@ -63,12 +64,40 @@ import {
 
 
 export default function StaffTable({ propdata, totalPage }: { propdata: StaffTableData[], totalPage:number }) {
+  const [staffData, setStaffData] = useState<StaffTableData[]>(propdata);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [editingStaff, setEditingStaff] = useState<StaffTableEditData | null>(
     null
   );
   const[currentPage, setCurrentPage] = useState<number>(1)
+  const [totalPages, setTotalPages] = useState<number>(totalPage)
+  
+  useEffect(()=>{
 
+    async function fetchStaffData(){
+      try {
+
+        const newData = await getAllStaff({page:currentPage,limit:5, search:""})
+
+        if(newData.success){
+          toast.success("data updated")
+          setStaffData(newData.data || [])
+          setTotalPages(newData.totalPage ||1)
+        }
+        else{
+          toast.error("error could not get latest data",{
+            description:`error: ${newData.message}`
+          })
+        }
+        
+      } catch (error) {
+        console.error("error happened while fetching latest data", error)  
+      }
+    }
+
+    fetchStaffData()
+
+  },[currentPage])
 
   function handleEditStaff(staff: StaffTableData) {
     setEditingStaff(staff as StaffTableEditData);
@@ -94,7 +123,7 @@ export default function StaffTable({ propdata, totalPage }: { propdata: StaffTab
     name: editingStaff.name,
     email: editingStaff.user.email,
     position: editingStaff.position,
-    password: editingStaff.password, // Note: typo fix from 'passowrd'
+    password: editingStaff.password, 
     status: editingStaff.status,
   };
 
@@ -116,7 +145,7 @@ export default function StaffTable({ propdata, totalPage }: { propdata: StaffTab
     toast.error("Unexpected error occurred");
   }
 }
-
+// todo fix the pagination when page is lesser than 7 all pages are being shown even if we have 2 pages.
 
 function getVisiblePages(current: number, total: number): (number | "...")[] {
   // If total pages are few (<=7), show all
@@ -155,7 +184,7 @@ function getVisiblePages(current: number, total: number): (number | "...")[] {
   return result;
 }
 
-const visiblePages = getVisiblePages(currentPage, totalPage);
+const visiblePages = getVisiblePages(currentPage, totalPages);
 
 
   async function handleDelete(userId: string) {
@@ -214,7 +243,7 @@ const visiblePages = getVisiblePages(currentPage, totalPage);
               </TableRow>
             </TableHeader>
             <TableBody>
-              {propdata.map((staff) => (
+              {staffData.map((staff) => (
                 <TableRow
                   key={staff.id}
                   className="border-orange-100 hover:bg-orange-50/50"
@@ -420,9 +449,8 @@ const visiblePages = getVisiblePages(currentPage, totalPage);
               ))}
             </TableBody>
           </Table>
-
-  {totalPage > 1 && (
-        <Pagination>
+  {totalPages > 1 && (
+        <Pagination className="py-4 border-t-2">
           <PaginationContent>
             {/* Previous Button */}
             <PaginationItem>
@@ -457,8 +485,8 @@ const visiblePages = getVisiblePages(currentPage, totalPage);
             {/* Next Button */}
             <PaginationItem>
               <PaginationNext
-                onClick={() => setCurrentPage((p) => Math.min(totalPage, p + 1))}
-                className={currentPage === totalPage ? "pointer-events-none opacity-50" : ""}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
           </PaginationContent>
