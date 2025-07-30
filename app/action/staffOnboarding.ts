@@ -1,8 +1,9 @@
 "use server"
 import {prisma} from "@/lib/Prisma";
 import  bcrypt from "bcrypt"
-import { staffOnboardingSchema } from "@/lib/ZodValidations";
-import type { StaffProfile, StaffTableData } from "../../types/prismaTypes";
+import z from "zod"
+import { staffOnboardingSchema, staffEditSchema } from "@/lib/ZodValidations";
+import type { StaffTableData, Status } from "../../types/prismaTypes";
 
 
 export async function staffOnboardingAction(formData: FormData):Promise<{success:boolean, message:string}> {
@@ -79,9 +80,6 @@ export async function staffOnboardingAction(formData: FormData):Promise<{success
         return {success:false, message:"error happened while onboarding staff"}
     }
 }
-
-
-
 
 export async function getAllStaff({page=1, limit=10, search=""}:{page?:number; limit?:number; search?:string;}):Promise<{success:boolean, data?:StaffTableData[],totalPage?:number , message:string}>{
     try {
@@ -165,4 +163,91 @@ export async function deleteStaffData(staffId:string):Promise<{success:boolean, 
         return {success:false, message:`error happened`}
     }
 
+}
+
+type StaffEdit = z.infer<typeof staffEditSchema>
+
+
+export async function editStaffDetails({staffId, staffEditData}:{
+    staffId:string;
+    staffEditData:undefined | StaffEdit;
+    
+}){
+    try {
+
+        if(!staffId || !staffEditData){
+            return {success:false, message:"missing data"}
+        }
+
+        const parsedData = staffEditSchema.safeParse(staffEditData)
+
+        if(!parsedData.success){
+            return {success:false, message:`invalid data provided: ${parsedData.error.flatten()}`}
+        }
+
+        const validatedEditData = parsedData.data;
+
+        const searchStaff = await prisma.user.findUnique({
+            where:{
+                id:staffId
+            }
+        })
+
+        if(!searchStaff){
+            return {success:false, message:"404 error staff data does not exist"}
+        }
+
+        // if the password is not provided and the email is same as the existing one, we can update without changing the password
+
+        if(!staffEditData.password && staffEditData.email === searchStaff.email){
+               await prisma.staffProfile.update({
+                where:{
+                    userId:staffId,
+                },
+                data:{
+                    name:validatedEditData.name,
+                    position:validatedEditData.position,
+                    status:validatedEditData.status as Status,
+                }
+              })
+              return {success:true, messgae:"sata updated successfully"}
+        }
+
+        // now if either the email/ password is changed or provided we can update both tables
+
+        const hashedPassword = validatedEditData.password ? await bcrypt.hash(validatedEditData.password, 10) : searchStaff.password; // if password is not provided, we keep the existing password
+        
+
+        await prisma.$transaction(async(tx)=>{
+            await tx.user.update({
+                where:{
+                    id:staffId
+                },
+                data:{
+                    name:validatedEditData.name,
+                    email:validatedEditData.email,
+                    password:hashedPassword,
+                }
+            })
+
+            await tx.staffProfile.update({
+                where:{
+                    userId:staffId
+                },
+                data:{
+                    name:validatedEditData.name,
+                    position:validatedEditData.position,
+                    status:validatedEditData.status as Status
+                }
+            })
+        })
+
+        return {success:true, message:"data updated successfully"}
+        
+    } catch (error) {
+
+        console.error("error happened while editing staff details: ", error)
+        return {success:false, message:"error happened while editing staff details"}
+        
+    }
 }

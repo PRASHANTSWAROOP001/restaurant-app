@@ -14,3 +14,12 @@ export const staffOnboardingSchema = z.object({
     password:z.string().min(6, "password length > 6"),
     position:z.string().min(2,"postion cant be lesser than 2 letters")
 })
+
+
+export const staffEditSchema = z.object({
+    name:z.string().min(3, "name cant be less than 3 letters"),
+    email:z.email("provide valid email"),
+    password:z.string().min(6, "password length > 6").optional(),
+    status:z.enum(["ACTIVE", "INACTIVE","TERMINATED"]),
+    position:z.string(),
+})

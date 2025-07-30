@@ -45,7 +45,7 @@ import { Badge } from "@/components/ui/badge";
 import { StaffTableData } from "../../types/prismaTypes";
 import { toast } from "sonner";
 
-import { deleteStaffData } from "@/app/action/staffOnboarding";
+import { deleteStaffData, editStaffDetails } from "@/app/action/staffOnboarding";
 
 interface StaffTableEditData extends StaffTableData {
   password?: string;
@@ -54,9 +54,9 @@ interface StaffTableEditData extends StaffTableData {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
+ // PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
+ // PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
@@ -75,11 +75,47 @@ export default function StaffTable({ propdata, totalPage }: { propdata: StaffTab
     setIsEditDialogOpen(true);
   }
 
-  function handleUpdateStaff(editId:string){
-    console.log(editId,"userId of staff")
-    console.log(editingStaff,"edit staff frontend data")
+  async function handleUpdateStaff(editId: string) {
+  console.log(editId, "userId of staff");
+  console.log(editingStaff, "edit staff frontend data");
 
+  // Guard clause to avoid undefined/null issues
+  if (
+    !editingStaff?.name ||
+    !editingStaff?.user.email ||
+    !editingStaff?.position ||
+    !editingStaff?.status
+  ) {
+    toast.error("Please fill all required fields");
+    return;
   }
+
+  const editData = {
+    name: editingStaff.name,
+    email: editingStaff.user.email,
+    position: editingStaff.position,
+    password: editingStaff.password, // Note: typo fix from 'passowrd'
+    status: editingStaff.status,
+  };
+
+  try {
+    const result = await editStaffDetails({
+      staffId: editId,
+      staffEditData: editData, // Now guaranteed to match StaffEdit type
+    });
+
+    if (!result.success) {
+      toast.error(result.message);
+      
+    } else {
+      toast.success("data updated successfully");
+      setIsEditDialogOpen(false)
+    }
+  } catch (error) {
+    console.error("Error updating staff:", error);
+    toast.error("Unexpected error occurred");
+  }
+}
 
 
 function getVisiblePages(current: number, total: number): (number | "...")[] {
