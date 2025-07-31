@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { signIn } from "next-auth/react"
 import { useSession } from "next-auth/react"
 import { redirect } from "next/navigation"
+import { SkeletonCard } from "@/components/shared/SkeletonCard"
 
 
 export default function SigninPage() {
@@ -56,6 +57,12 @@ export default function SigninPage() {
             })
         }
     }
+
+  if (status == 'loading'){
+    return (
+      <SkeletonCard></SkeletonCard>
+    )
+  }  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
