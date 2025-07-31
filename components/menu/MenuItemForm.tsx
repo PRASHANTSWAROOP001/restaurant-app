@@ -16,23 +16,14 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, X, ImageIcon } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing";
+import {Label as LabelEnum} from '@prisma/client'
+import { MenuItemDTO } from "@/types/menu";
 
-export type MenuLabel = "SPECIALITY" | "NEW" | "POPULAR" | "AFFORDABLE";
+const labels = Object.values(LabelEnum)
 
-export interface MenuItem {
-  id: string;
-  name: string;
-  category: string;
-  basePrice: number;
-  sellPrice: number;
-  imageUrl?: string;
-  discounted: boolean;
-  label?: MenuLabel;
-  createdAt: string;
-  updatedAt: string;
-}
 
-export type MenuItemFormData = Omit<MenuItem, "id" | "createdAt" | "updatedAt">;
+
+export type MenuItemFormData = Omit<MenuItemDTO, "id" | "createdAt" | "updatedAt">;
 
 interface MenuItemFormProps {
   formData: MenuItemFormData;
@@ -42,7 +33,7 @@ interface MenuItemFormProps {
   isEditing?: boolean;
 }
 
-const labels: MenuLabel[] = ["SPECIALITY", "NEW", "POPULAR", "AFFORDABLE"];
+
 
 export function MenuItemForm({
   formData,
@@ -276,7 +267,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
                 onFormDataChange({
                   ...formData,
                   label:
-                    value === "No Label" ? undefined : (value as MenuLabel),
+                    value === "No Label" ? undefined : (value as LabelEnum),
                 })
               }
             >

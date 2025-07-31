@@ -12,7 +12,10 @@ interface MenuFiltersProps {
   sortBy: string
   sortOrder: string
   onSortChange: (value: string) => void
-  categories: string[]
+  categories: {
+    name:string,
+    id:string
+  }[]
 }
 
 export function MenuFilters({
@@ -43,8 +46,8 @@ export function MenuFilters({
         </SelectTrigger>
         <SelectContent>
           {categories.map((category) => (
-            <SelectItem key={category} value={category}>
-              {category}
+            <SelectItem key={category.id} value={category.id}>
+              {category.name}
             </SelectItem>
           ))}
         </SelectContent>

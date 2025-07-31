@@ -15,28 +15,35 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Edit, Trash2, DollarSign, Tag, ImageIcon, ChefHat } from "lucide-react"
-import type { MenuItem, MenuLabel } from "./MenuItemForm"
+import { MenuItemDTO } from "@/types/menu"
+import { Label } from "@prisma/client"
 
 interface MenuItemTableProps {
-  items: MenuItem[]
-  onEdit: (item: MenuItem) => void
+  items: MenuItemDTO[]
+  onEdit: (item: MenuItemDTO) => void
   onDelete: (id: string) => void
 }
 
-const getLabelColor = (label?: MenuLabel) => {
+const getLabelColor = (label?: Label): string => {
   switch (label) {
-    case "SPECIALITY":
+    case "SPECIAL":
       return "bg-purple-100 text-purple-800 hover:bg-purple-200"
     case "NEW":
       return "bg-green-100 text-green-800 hover:bg-green-200"
     case "POPULAR":
       return "bg-orange-100 text-orange-800 hover:bg-orange-200"
-    case "AFFORDABLE":
+    case "BEST_VALUE":
       return "bg-blue-100 text-blue-800 hover:bg-blue-200"
-    default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+    case "RECOMMENDED":
+      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+    case "MOST_ORDERED":
+      return "bg-pink-100 text-pink-800 hover:bg-pink-200"
+    default: {
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+    }
   }
 }
+
 
 export function MenuItemTable({ items, onEdit, onDelete }: MenuItemTableProps) {
   if (items.length === 0) {

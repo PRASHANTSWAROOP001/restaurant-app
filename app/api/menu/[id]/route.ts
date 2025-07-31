@@ -3,6 +3,7 @@ import { menuItemSchema } from "@/lib/ZodValidations";
 import { prisma } from "@/lib/Prisma";
 import { Label } from "../../../types/prismaTypes";
 
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -79,5 +80,50 @@ export async function POST(req: NextRequest) {
       success: false,
       message: "Internal server error",
     }, { status: 500 });
+  }
+}
+
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    console.log("Deleting menu item with ID:", id);
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        message: "Menu item ID is required",
+      }, { status: 400 });
+    }
+
+    const searchMenuItem = await prisma.menuItem.findUnique({
+      where:{
+        id:id
+      }
+    })
+
+    if(!searchMenuItem){
+      return NextResponse.json({
+        success: false,
+        message: "Menu item not found",
+      },  { status: 404 });
+    }
+
+
+    await prisma.menuItem.delete({
+      where:{
+        id:id
+      }
+    })  
+
+    return NextResponse.json({
+      success:true,
+      message: `data with given id ${id} deleted successfully`
+    })
+
+    
+  } catch (error) {
+
+    console.error("Error deleting menu item:", error);
+    return NextResponse.json({success:false, message:"Internal server error"}, { status: 500 });
   }
 }
