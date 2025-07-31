@@ -23,3 +23,14 @@ export const staffEditSchema = z.object({
     status:z.enum(["ACTIVE", "INACTIVE","TERMINATED"]),
     position:z.string(),
 })
+
+export const menuItemSchema = z.object({
+    name: z.string().min(3, "Name must be at least 3 characters"),
+    category: z.string().min(1, "Category is required"),
+    basePrice:z.number(),
+    sellPrice:z.number(),
+    label:z.enum(["SPECIAL", "NEW", "POPULAR", "RECOMMENDED","MOST_ORDERED", "BEST_VALUE" ]).optional(),
+    imageUrl:z.string(),
+    discounted:z.boolean().default(false),
+    categoryId:z.string().optional()
+})
