@@ -6,6 +6,7 @@ import type { NextAuthOptions } from "next-auth";
 import Google from "next-auth/providers/google";
 import Github from "next-auth/providers/github";
 
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -112,24 +113,23 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
 async jwt({ token, user }) {
   try {
-    // Always get fresh user data from DB using token.email or user.email
-    const email = token?.email || user?.email;
+    const userId = token.sub || user?.id;
 
-    if (!email) {
-      console.warn("No email found on token or user");
+    if (!userId) {
+      console.warn("No user ID found on token or user");
       return token;
     }
 
     const dbUser = await prisma.user.findUnique({
-      where: { email },
+      where: { id: userId },
+      select: { id: true, email: true, role: true }, // 👈 Important
     });
 
     if (!dbUser) {
-      console.warn("User not found in DB for email:", email);
+      console.warn("User not found in DB for ID:", userId);
       return token;
     }
 
-    // Always override with fresh DB values
     token.email = dbUser.email;
     token.id = dbUser.id;
     token.role = dbUser.role || "USER";
@@ -139,7 +139,8 @@ async jwt({ token, user }) {
     console.error("Error in jwt callback:", error);
     return token;
   }
-},
+}
+,
     async session({ session, token }) {
       // Add custom fields to session
 

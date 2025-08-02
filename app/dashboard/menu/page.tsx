@@ -1,5 +1,7 @@
-import MenuManagementPage from "@/components/menu/MenuPage"
+
 import { getCategories , getMenuItems} from "@/app/action/MenuActions"
+import MenuMainClientPage from "@/components/menu/MenuMainPage"
+
 
 export default async function MenuServerPage(){
 
@@ -10,9 +12,11 @@ export default async function MenuServerPage(){
   return (
 
     <main className="w-full h-screen">
-
-      <MenuManagementPage categoryData={categoriesData.data || []} initialData={initialMenuItemData.data||[]}></MenuManagementPage>
-
+        <div className="p-6">
+        <h1 className="text-3xl font-bold text-gray-900">Menu Management</h1>
+        <p className="text-gray-600 mt-2">Manage your restaurant menu items, prices, and categories</p>
+      </div>
+      <MenuMainClientPage intialData={initialMenuItemData.data || []} categoryDto={categoriesData.data || []}></MenuMainClientPage>
     </main>
 
   )

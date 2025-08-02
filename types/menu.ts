@@ -4,6 +4,7 @@ export interface MenuItemDTO {
   id: string;
   name: string;
   category: string;
+  categoryId?: string;
   basePrice: number;
   sellPrice: number;
   imageUrl?: string;
@@ -18,6 +19,7 @@ export function transformMenuItem(item: any): MenuItemDTO {
     id: item.id,
     name: item.name,
     category: item.category.name,
+    categoryId: item.category.id,
     basePrice: item.basePrice,
     sellPrice: item.sellPrice,
     imageUrl: item.imageUrl ?? undefined,

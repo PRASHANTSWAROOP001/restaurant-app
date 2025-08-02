@@ -1,5 +1,7 @@
+"use server"
 import { prisma } from "../../lib/Prisma"
 import { MenuItemDTO, transformMenuItem } from "@/types/menu"
+
 export async function getCategories(): Promise<{ success: boolean, data?: { id: string, name: string }[], message: string }> {
     try {
 
@@ -36,6 +38,38 @@ export async function getCategories(): Promise<{ success: boolean, data?: { id: 
     }
 }
 
+export async function createCategory(category:string):Promise<{success:boolean, message:string}>{
+    try {
+        const searchExisting = await prisma.category.findFirst({
+            where:{
+                ...(category && {
+                    name:{
+                        contains:category,
+                        mode:"insensitive"
+                    }
+                })
+                
+            }
+        })
+
+        if(searchExisting){
+            return {success:false, message:"category already exists"}
+        }
+
+        const newCategory = await prisma.category.create({
+            data:{
+                name:category
+            }
+        })
+
+        return {success:true, message:`category created with id ${newCategory.id}`}
+
+    } catch (error) {
+        console.error("error happened while creating category", error)
+        return {success:false, message:"internal server error"}
+    }
+}
+
 
 export async function getMenuItems({ page = 1, limit = 10, search = "" }: { page?: number; limit?: number; search?: string; }): Promise<{ success: boolean, data?: MenuItemDTO[], totalPage?:number, message: string }> {
 
@@ -59,6 +93,7 @@ export async function getMenuItems({ page = 1, limit = 10, search = "" }: { page
                     category: {
                         select: {
                             name: true,
+                            id:true
                         },
                     },
                 },
