@@ -1,7 +1,7 @@
 "use client";
 
 import { ChefHat } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MenuItemDTO } from "@/types/menu";
 import axios from "axios";
 
@@ -18,7 +18,8 @@ import MenuItemFormSheet from "./FormComponents";
 import { MenuItemTable } from "./MenuTable"; // ← Import your table component
 import { MenuItemFormData } from "./MenuItemForm";
 import { toast } from "sonner";
-
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
+import { getMenuItems } from "@/app/action/MenuActions";
 type CategoryDto = {
   id: string;
   name: string;
@@ -27,102 +28,94 @@ type CategoryDto = {
 export default function MenuMainClientPage({
   categoryDto,
   intialData,
+  intialPages,
 }: {
   categoryDto: CategoryDto[];
   intialData: MenuItemDTO[];
+  intialPages: number;
 }) {
   const [items, setItems] = useState<MenuItemDTO[]>(intialData || []);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<MenuItemDTO | null>(null);
+  const [totalPages, setTotalPages] = useState<number>(intialPages);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await getMenuItems({page:currentPage, limit:5,search:""})
+
+        setItems(res.data || []);
+        setTotalPages(res.totalPage || 1)
+      } catch (error) {
+        console.error("Error fetching paginated data", error);
+      }
+    }
+
+    fetchData();
+  }, [currentPage]);
 
   function onEdit(item: MenuItemDTO) {
-    setEditingItem(item)
+    setEditingItem(item);
     setIsOpen(true);
   }
 
   async function onDelete(id: string) {
     try {
-      
-      const result = await axios.delete(`/api/menu/delete/${id}`)
+      const result = await axios.delete(`/api/menu/delete/${id}`);
 
-      if(result.data?.success){
-        toast.success("data deleted successfully")
-      }
-      else{
-        toast.error("error while deleting menu", {
-          description:`${result.data.message} || unknown error`
-        })
+      if (result.data?.success) {
+        toast.success("Data deleted successfully");
+        setItems((prev) => prev.filter((item) => item.id !== id));
+      } else {
+        toast.error("Error while deleting menu", {
+          description: `${result.data.message} || unknown error`,
+        });
       }
     } catch (error) {
-      console.error("error while deleting menu item", error)
+      console.error("Error while deleting menu item", error);
     }
   }
 
-async function onSubmit(updatedData: MenuItemFormData) {
-  if (editingItem) {
-    try {
-      const editResponse = await axios.put("/api/menu",{
-      id:editingItem.id,
-      name:updatedData.name,
-      categoryId:updatedData.categoryId,
-      imageUrl:updatedData.imageUrl,
-      label:updatedData.label,
-      discounted:updatedData.discounted,
-      sellPrice:updatedData.sellPrice,
-      basePrice:updatedData.basePrice
-      })
-      
+  async function onSubmit(updatedData: MenuItemFormData) {
+    if (editingItem) {
+      try {
+        const editResponse = await axios.put("/api/menu", {
+          id: editingItem.id,
+          ...updatedData,
+        });
 
-      if(editResponse.data?.success){
-        toast.success("data updated successfully", {
-          description:  `${editResponse.data.message || "success message"}`
-        })
+        if (editResponse.data?.success) {
+          toast.success("Data updated successfully", {
+            description: `${editResponse.data.message || "Success message"}`,
+          });
+          setItems((prev) =>
+            prev.map((item) => (item.id === editingItem.id ? { ...item, ...updatedData } : item))
+          );
+        }
+      } catch (error) {
+        console.error("Error while updating menu item", error);
       }
+    } else {
+      try {
+        const result = await axios.post("/api/menu/", updatedData);
 
-    } catch (error) {
-
-      console.error("error while updating menu item",error)
-      
+        if (result.status === 200 || result.status === 201) {
+          toast.success("Data added successfully");
+          setCurrentPage(1); // reset to first page on new item creation
+        } else {
+          toast.error("Error while adding new menu item", {
+            description: `${result.data?.message || "Unknown error"}`,
+          });
+        }
+      } catch (error) {
+        console.error("Error happened while adding new data", error);
+      }
     }
 
-  } else {
-    console.log("trying to save data.")
-    try {
-
-      const result = await axios.post("/api/menu/", {
-      name:updatedData.name,
-      categoryId:updatedData.categoryId,
-      imageUrl:updatedData.imageUrl,
-      label:updatedData.label,
-      discounted:updatedData.discounted,
-      sellPrice:updatedData.sellPrice,
-      basePrice:updatedData.basePrice
-      })
-
-      console.log(result)
-
-      if (result.status == 200 || result.status == 201){
-        toast.success("data added successfully")
-      }
-      else{
-        toast.error("error while adding new menu item", {
-          description:`${result.data?.message || "unknown error"}`
-        })
-      }
-      
-    } catch (error) {
-      console.error("error happend while adding new data", error)
-    }
-
- 
+    setIsOpen(false);
+    setEditingItem(null);
   }
-
-  setIsOpen(false);
-  setEditingItem(null);
-}
-
-
-
 
   return (
     <div className="px-6 py-6">
@@ -158,7 +151,24 @@ async function onSubmit(updatedData: MenuItemFormData) {
         </CardContent>
 
         <CardFooter>
-          <h1>Pagination</h1>
+
+          { totalPages> 1 && (
+                      <Pagination>
+            <PaginationContent>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    isActive={i + 1 === currentPage}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+            </PaginationContent>
+          </Pagination>
+          )}
+
         </CardFooter>
       </Card>
 

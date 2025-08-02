@@ -6,7 +6,7 @@ import MenuMainClientPage from "@/components/menu/MenuMainPage"
 export default async function MenuServerPage(){
 
   const categoriesData = await getCategories()
-  const initialMenuItemData = await getMenuItems({page:1, limit:10,search:""})
+  const initialMenuItemData = await getMenuItems({page:1, limit:5,search:""})
 
 
   return (
@@ -16,7 +16,7 @@ export default async function MenuServerPage(){
         <h1 className="text-3xl font-bold text-gray-900">Menu Management</h1>
         <p className="text-gray-600 mt-2">Manage your restaurant menu items, prices, and categories</p>
       </div>
-      <MenuMainClientPage intialData={initialMenuItemData.data || []} categoryDto={categoriesData.data || []}></MenuMainClientPage>
+      <MenuMainClientPage intialPages={initialMenuItemData.totalPage || 1} intialData={initialMenuItemData.data || []} categoryDto={categoriesData.data || []}></MenuMainClientPage>
     </main>
 
   )
