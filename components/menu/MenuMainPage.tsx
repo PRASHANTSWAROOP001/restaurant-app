@@ -153,7 +153,7 @@ export default function MenuMainClientPage({
         <CardFooter>
 
           { totalPages> 1 && (
-                      <Pagination>
+                      <Pagination className="py-2">
             <PaginationContent>
               {Array.from({ length: totalPages }, (_, i) => (
                 <PaginationItem key={i}>

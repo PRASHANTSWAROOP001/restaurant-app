@@ -131,7 +131,7 @@ export function MenuItemForm({
           }
         >
           <SelectTrigger>
-            <SelectValue>
+            <SelectValue placeholder='Choose Category'>
               {categories.find((c) => c.id === formData.categoryId)?.name ??
                 "Choose Category"}
             </SelectValue>
